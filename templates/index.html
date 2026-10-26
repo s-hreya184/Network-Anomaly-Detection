@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CyberGuard XAI-NIDS — Network Intrusion Detection &amp; Gemini SOC Copilot</title>
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/style.css?v=8">
   <!-- Chart.js for interactive analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
+
 <body>
   <div class="bg-mesh"></div>
-  
+
   <div class="app-wrapper">
     <!-- Top Navigation Bar -->
     <header class="navbar">
@@ -21,7 +23,7 @@
           <span>ML Traffic Classification &amp; Gemini Copilot</span>
         </div>
       </div>
-      
+
       <nav class="nav-links">
         <button class="nav-tab active" data-target="tab-overview">Detection &amp; Overview</button>
         <button class="nav-tab" data-target="tab-batch">Batch CSV Analysis</button>
@@ -29,20 +31,11 @@
         <button class="nav-tab" data-target="tab-alerts">Security Alerts</button>
         <button class="nav-tab" data-target="tab-copilot">AI SOC Copilot</button>
       </nav>
-      
-      <div class="nav-actions">
-        <div id="system-status" class="status-badge">
-          <span class="status-dot"></span> XAI &amp; ML ENGINE ONLINE
-        </div>
-        <a href="/docs" target="_blank" class="docs-btn">
-          <span>API Docs</span> &rarr;
-        </a>
-      </div>
     </header>
 
     <!-- Main Container -->
     <main class="container">
-      
+
       <!-- ================= TAB 1: DETECTION & OVERVIEW ================= -->
       <section id="tab-overview" class="tab-content active">
         <!-- Hero Section -->
@@ -50,11 +43,11 @@
           <div class="hero-tag">Explainable Traffic Intelligence</div>
           <h2 class="hero-title">Explainable Network Intrusion &amp; Anomaly Detection</h2>
           <p class="hero-subtitle">
-            Analyze network flows in real time with multi-class Random Forest intelligence.
-            Get granular Shapley feature attribution, counterfactual evasion robustness metrics, and automated AI SOC guidance.
+            Analyze network flows using CyberGuard's explainable intrusion detection system.
           </p>
           <div class="hero-cta">
-            <button class="btn-primary" onclick="document.getElementById('single-flow-card').scrollIntoView({behavior: 'smooth'})">
+            <button class="btn-primary"
+              onclick="document.getElementById('single-flow-card').scrollIntoView({behavior: 'smooth'})">
               Analyze Single Flow &darr;
             </button>
             <button class="btn-secondary" onclick="switchTab('tab-batch')">
@@ -66,36 +59,13 @@
           </div>
         </div>
 
-        <!-- Metrics Overview Grid -->
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="metric-label">Model Architecture</div>
-            <div class="metric-value" style="font-size: 1.6rem; color: var(--color-cyan);">Random Forest</div>
-            <div class="metric-desc">Tuned Scikit-learn Pipeline</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Evaluation Macro F1</div>
-            <div class="metric-value" style="color: var(--color-emerald);">88.7%</div>
-            <div class="metric-desc">Hold-out test benchmark</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Explainability</div>
-            <div class="metric-value" style="font-size: 1.6rem; color: var(--color-rose);">Local XAI</div>
-            <div class="metric-desc">Marginal Shapley Attribution</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">AI Assistant</div>
-            <div class="metric-value" style="font-size: 1.6rem; color: var(--color-blue);">Gemini API</div>
-            <div class="metric-desc">SOC Triage &amp; Remediation</div>
-          </div>
-        </div>
-
         <!-- Single Flow Classification Card -->
         <div id="single-flow-card" class="card">
           <div class="card-header">
             <div>
               <h3 class="card-title">SINGLE NETWORK FLOW CLASSIFIER</h3>
-              <p class="card-subtitle">Input network flow telemetry metrics to generate instantaneous threat classification and XAI explanations.</p>
+              <p class="card-subtitle">Input network flow telemetry metrics to generate instantaneous threat
+                classification and XAI explanations.</p>
             </div>
           </div>
 
@@ -104,13 +74,16 @@
 
           <!-- Input Form -->
           <form id="single-flow-form">
+            <!-- Group 1: Protocol & Service Identification -->
+            <div class="form-section-title">
+              <span>1. Protocol &amp; Connection Context</span>
+            </div>
             <div class="form-grid">
               <div class="form-group">
-                <label class="form-label" for="flow_duration">Duration (Seconds)</label>
-                <input type="number" step="0.0001" id="flow_duration" class="form-control" value="0.12" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="flow_protocol">Protocol</label>
+                <label class="form-label" for="flow_protocol">
+                  <span>Protocol</span>
+                  <span class="form-hint">Transport layer</span>
+                </label>
                 <select id="flow_protocol" class="form-control">
                   <option value="TCP" selected>TCP</option>
                   <option value="UDP">UDP</option>
@@ -119,7 +92,10 @@
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label" for="flow_service">Service</label>
+                <label class="form-label" for="flow_service">
+                  <span>Service</span>
+                  <span class="form-hint">Application</span>
+                </label>
                 <select id="flow_service" class="form-control">
                   <option value="HTTP" selected>HTTP</option>
                   <option value="HTTPS">HTTPS</option>
@@ -132,7 +108,10 @@
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label" for="flow_tcp_flags">TCP Flags</label>
+                <label class="form-label" for="flow_tcp_flags">
+                  <span>TCP Flags</span>
+                  <span class="form-hint">Handshake flags</span>
+                </label>
                 <select id="flow_tcp_flags" class="form-control">
                   <option value="ACK" selected>ACK</option>
                   <option value="SYN">SYN</option>
@@ -144,45 +123,168 @@
                   <option value="SYN-RST">SYN-RST</option>
                 </select>
               </div>
-
               <div class="form-group">
-                <label class="form-label" for="flow_src_bytes">Source Bytes</label>
-                <input type="number" step="1" id="flow_src_bytes" class="form-control" value="215" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="flow_dst_bytes">Destination Bytes</label>
-                <input type="number" step="1" id="flow_dst_bytes" class="form-control" value="456" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="flow_src_packets">Source Packets</label>
-                <input type="number" step="1" id="flow_src_packets" class="form-control" value="3" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="flow_dst_packets">Destination Packets</label>
-                <input type="number" step="1" id="flow_dst_packets" class="form-control" value="4" required>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="flow_src_dst_byte_ratio">Src / Dst Byte Ratio</label>
-                <input type="number" step="0.01" id="flow_src_dst_byte_ratio" class="form-control" value="0.47" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="flow_packets_per_second">Packets / Second</label>
-                <input type="number" step="0.1" id="flow_packets_per_second" class="form-control" value="58.3" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="flow_bytes_per_second">Bytes / Second</label>
-                <input type="number" step="0.1" id="flow_bytes_per_second" class="form-control" value="5591.7" required>
+                <label class="form-label" for="flow_duration">
+                  <span>Duration</span>
+                  <span class="form-hint">Seconds (e.g. 0.05)</span>
+                </label>
+                <input type="number" step="any" id="flow_duration" class="form-control" value="0.05" required>
               </div>
             </div>
 
-            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 14px; font-size: 1rem;">
-              Classify &amp; Explain Flow &rarr;
-            </button>
+            <!-- Group 2: Volume & Payload Metrics -->
+            <div class="form-section-title">
+              <span>2. Traffic Volume &amp; Packets</span>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="flow_src_bytes">
+                  <span>Source Bytes</span>
+                  <span class="form-hint">Sent from client</span>
+                </label>
+                <input type="number" step="any" id="flow_src_bytes" class="form-control" value="250" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="flow_dst_bytes">
+                  <span>Destination Bytes</span>
+                  <span class="form-hint">Returned by server</span>
+                </label>
+                <input type="number" step="any" id="flow_dst_bytes" class="form-control" value="1200" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="flow_src_packets">
+                  <span>Source Packets</span>
+                  <span class="form-hint">Client packet count</span>
+                </label>
+                <input type="number" step="any" id="flow_src_packets" class="form-control" value="4" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="flow_dst_packets">
+                  <span>Destination Packets</span>
+                  <span class="form-hint">Server packet count</span>
+                </label>
+                <input type="number" step="any" id="flow_dst_packets" class="form-control" value="6" required>
+              </div>
+            </div>
+
+            <!-- Group 3: Velocity & Distribution Ratios -->
+            <div class="form-section-title">
+              <span>3. Flow Rates &amp; Distribution</span>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="flow_src_dst_byte_ratio">
+                  <span>Src / Dst Ratio</span>
+                  <span class="form-hint">src_bytes / dst_bytes</span>
+                </label>
+                <input type="number" step="any" id="flow_src_dst_byte_ratio" class="form-control" value="0.21" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="flow_packets_per_second">
+                  <span>Packets / Sec</span>
+                  <span class="form-hint">Flow packet rate</span>
+                </label>
+                <input type="number" step="any" id="flow_packets_per_second" class="form-control" value="200" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="flow_bytes_per_second">
+                  <span>Bytes / Sec</span>
+                  <span class="form-hint">Flow bandwidth rate</span>
+                </label>
+                <input type="number" step="any" id="flow_bytes_per_second" class="form-control" value="29000" required>
+              </div>
+            </div>
+
+            <!-- Form Action Buttons -->
+            <div class="form-actions-bar">
+              <button type="submit" class="btn-primary" style="flex: 2; justify-content: center; padding: 13px; font-size: 0.95rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Classify &amp; Explain Flow
+              </button>
+              <button type="button" class="btn-secondary" id="reset-flow-btn" onclick="resetFlowForm()" style="flex: 1; justify-content: center; padding: 13px; font-size: 0.92rem;">
+                Reset to Defaults
+              </button>
+            </div>
           </form>
 
           <!-- Dynamic Result Box -->
           <div id="single-result-container"></div>
+        </div>
+
+        <!-- How It Works Section -->
+        <div class="card" id="how-it-works-section" style="margin-top: 36px;">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">HOW IT WORKS</h3>
+              <p class="card-subtitle">A simple, 4-step look at how the AI spots suspicious activity and protects your network.</p>
+            </div>
+          </div>
+
+          <div class="how-it-works-grid">
+            <!-- Step 1 -->
+            <div class="how-step-card">
+              <div class="how-step-num">01</div>
+              <div class="how-step-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                </svg>
+              </div>
+              <h4 class="how-step-title">1. Observe Traffic</h4>
+              <p class="how-step-desc">
+                Every internet connection works like a phone call. The system looks at basic call details: how long it lasted, how fast data traveled, and how much information went back and forth.
+              </p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="how-step-card">
+              <div class="how-step-num">02</div>
+              <div class="how-step-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </div>
+              <h4 class="how-step-title">2. Prepare the Data</h4>
+              <p class="how-step-desc">
+                Computers understand numbers best. Words like "Web Browsing" or "File Transfer" are turned into numerical scores so the AI model can compare them fairly and quickly.
+              </p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="how-step-card">
+              <div class="how-step-num">03</div>
+              <div class="how-step-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+              </div>
+              <h4 class="how-step-title">3. AI Safety Check</h4>
+              <p class="how-step-desc">
+                A committee of 100 trained AI decision-makers reviews the conversation. They compare it against thousands of known patterns to decide if it's normal everyday browsing or an attack.
+              </p>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="how-step-card">
+              <div class="how-step-num">04</div>
+              <div class="how-step-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+              </div>
+              <h4 class="how-step-title">4. Clear Explanation</h4>
+              <p class="how-step-desc">
+                Instead of just giving a warning, the system tells you in plain English <i>why</i> it looked suspicious (e.g. "traffic was 50x faster than normal") and provides steps to block it.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -194,21 +296,27 @@
               <h3 class="card-title">BATCH TRAFFIC DATASET EVALUATION</h3>
               <p class="card-subtitle">Upload network flow capture files or run against the benchmark dataset.</p>
             </div>
-            <button id="load-demo-btn" class="btn-secondary">
-              Load Benchmark Demo Dataset (1,000 Flows)
+            <button id="load-demo-btn" class="btn-secondary" style="font-size: 0.85rem; padding: 8px 16px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Load Benchmark Demo (1,000 Flows)
             </button>
           </div>
 
           <div id="csv-dropzone" class="dropzone">
             <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
             <div class="dropzone-icon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto;">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto;">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
             </div>
-            <h4 style="font-size: 1.1rem; color: #FFF; margin-bottom: 6px;">Drag &amp; Drop Traffic CSV File Here</h4>
+            <h4 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 6px;">Drag &amp; Drop Traffic CSV File Here</h4>
             <p style="color: #64748B; font-size: 0.88rem;">or click to browse from your computer</p>
             <div id="batch-status" style="margin-top: 10px; color: var(--color-cyan); font-weight: 600;"></div>
           </div>
@@ -242,13 +350,13 @@
             <!-- Charts Grid -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px;">
               <div class="card" style="margin-bottom: 0;">
-                <h4 style="font-size: 1rem; color: #FFF; margin-bottom: 16px;">Attack Distribution Breakdown</h4>
+                <h4 style="font-size: 1rem; color: var(--text-primary); margin-bottom: 16px;">Attack Distribution Breakdown</h4>
                 <div style="height: 260px; display: flex; align-items: center; justify-content: center;">
                   <canvas id="attackDistributionChart"></canvas>
                 </div>
               </div>
               <div class="card" style="margin-bottom: 0;">
-                <h4 style="font-size: 1rem; color: #FFF; margin-bottom: 16px;">Severity Classification</h4>
+                <h4 style="font-size: 1rem; color: var(--text-primary); margin-bottom: 16px;">Severity Classification</h4>
                 <div style="height: 260px; display: flex; align-items: center; justify-content: center;">
                   <canvas id="severityChart"></canvas>
                 </div>
@@ -257,7 +365,31 @@
 
             <!-- Results Data Table -->
             <div class="card" style="margin-bottom: 0;">
-              <h4 style="font-size: 1rem; color: #FFF; margin-bottom: 16px;">Evaluated Flows (First 100 Rows)</h4>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                <div>
+                  <h4 style="font-size: 1rem; color: var(--text-primary); margin-bottom: 4px;">Evaluated Flows (First 100 Rows Displayed)</h4>
+                  <p style="font-size: 0.8rem; color: #64748B;">Download the full inspection ledger or summary report below.</p>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <button type="button" class="btn-secondary" onclick="downloadBatchCSVReport()" style="padding: 8px 16px; font-size: 0.84rem;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download Full CSV
+                  </button>
+                  <button type="button" class="btn-primary" onclick="downloadBatchSummaryReport()" style="padding: 8px 16px; font-size: 0.84rem;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    Download Summary Report
+                  </button>
+                </div>
+              </div>
               <div class="table-responsive">
                 <table class="custom-table">
                   <thead>
@@ -286,16 +418,19 @@
           <div class="card-header">
             <div>
               <h3 class="card-title">WHAT-IF TRAFFIC SIMULATOR</h3>
-              <p class="card-subtitle">Perturb individual network flow parameters to understand model decision boundaries.</p>
+              <p class="card-subtitle">Perturb individual network flow parameters to understand model decision
+                boundaries.</p>
             </div>
           </div>
 
           <form id="simulator-form">
-            <h4 style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; margin-bottom: 12px;">1. Baseline Flow Characteristics</h4>
+            <h4
+              style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; margin-bottom: 12px;">
+              1. Baseline Flow Characteristics</h4>
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label">Duration</label>
-                <input type="number" step="0.01" id="sim_base_duration" class="form-control" value="0.10">
+                <input type="number" step="any" id="sim_base_duration" class="form-control" value="0">
               </div>
               <div class="form-group">
                 <label class="form-label">Protocol</label>
@@ -325,36 +460,37 @@
 
               <div class="form-group">
                 <label class="form-label">Src Bytes</label>
-                <input type="number" id="sim_base_src_bytes" class="form-control" value="250">
+                <input type="number" step="any" id="sim_base_src_bytes" class="form-control" value="0">
               </div>
               <div class="form-group">
                 <label class="form-label">Dst Bytes</label>
-                <input type="number" id="sim_base_dst_bytes" class="form-control" value="500">
+                <input type="number" step="any" id="sim_base_dst_bytes" class="form-control" value="0">
               </div>
               <div class="form-group">
                 <label class="form-label">Src Packets</label>
-                <input type="number" id="sim_base_src_packets" class="form-control" value="4">
+                <input type="number" step="any" id="sim_base_src_packets" class="form-control" value="0">
               </div>
               <div class="form-group">
                 <label class="form-label">Dst Packets</label>
-                <input type="number" id="sim_base_dst_packets" class="form-control" value="5">
+                <input type="number" step="any" id="sim_base_dst_packets" class="form-control" value="0">
               </div>
 
               <div class="form-group">
                 <label class="form-label">Src/Dst Ratio</label>
-                <input type="number" step="0.01" id="sim_base_ratio" class="form-control" value="0.5">
+                <input type="number" step="any" id="sim_base_ratio" class="form-control" value="0">
               </div>
               <div class="form-group">
                 <label class="form-label">Packets / Sec</label>
-                <input type="number" id="sim_base_pps" class="form-control" value="40">
+                <input type="number" id="sim_base_pps" class="form-control" value="0">
               </div>
               <div class="form-group">
                 <label class="form-label">Bytes / Sec</label>
-                <input type="number" id="sim_base_bps" class="form-control" value="4000">
+                <input type="number" step="any" id="sim_base_bps" class="form-control" value="0">
               </div>
             </div>
 
-            <h4 style="color: var(--color-cyan); font-size: 0.85rem; text-transform: uppercase; margin: 20px 0 12px 0;">2. Modify Specific Attack Features</h4>
+            <h4 style="color: var(--color-cyan); font-size: 0.85rem; text-transform: uppercase; margin: 20px 0 12px 0;">
+              2. Modify Specific Attack Features</h4>
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label">Simulated Src Packets (e.g. 85 for DoS)</label>
@@ -394,7 +530,8 @@
           <div class="card-header">
             <div>
               <h3 class="card-title">SECURITY INCIDENT LOG</h3>
-              <p class="card-subtitle">Real-time alert ledger recording anomalous network events and severity scores.</p>
+              <p class="card-subtitle">Real-time alert ledger recording anomalous network events and severity scores.
+              </p>
             </div>
             <button class="btn-secondary" onclick="loadAlerts()">
               Refresh Log
@@ -411,7 +548,8 @@
           <div class="card-header" style="margin-bottom: 16px;">
             <div>
               <h3 class="card-title">AI SOC COPILOT (POWERED BY GOOGLE GEMINI)</h3>
-              <p class="card-subtitle">Interactive AI Security Operations Center analyst for deep threat investigation, firewall synthesis, and MITRE ATT&amp;CK guidance.</p>
+              <p class="card-subtitle">Interactive AI Security Operations Center analyst for deep threat investigation,
+                firewall synthesis, and MITRE ATT&amp;CK guidance.</p>
             </div>
             <div class="status-badge">
               <span class="status-dot"></span> GEMINI 1.5 FLASH READY
@@ -422,23 +560,36 @@
             <!-- Message thread -->
             <div id="chat-messages" class="chat-messages">
               <div class="chat-bubble bot">
-                <b style="color: var(--color-cyan); display: block; font-size: 0.82rem; margin-bottom: 4px;">CYBERGUARD COPILOT</b>
-                Greetings, Analyst. I am connected to the network intrusion detection pipeline. You can ask me to explain specific flow telemetry, generate custom firewall drop rules, map detected threats to the MITRE ATT&amp;CK framework, or investigate evasion resilience.
+                <b style="color: var(--color-cyan); display: block; font-size: 0.82rem; margin-bottom: 4px;">CYBERGUARD
+                  COPILOT</b>
+                Greetings, Analyst. I am connected to the network intrusion detection pipeline. You can ask me to
+                explain specific flow telemetry, generate custom firewall drop rules, map detected threats to the MITRE
+                ATT&amp;CK framework, or investigate evasion resilience.
               </div>
             </div>
 
             <!-- Quick Suggestion Chips -->
             <div class="chat-presets-bar">
               <span style="font-size: 0.75rem; color: #64748B; align-self: center;">Suggested Prompts:</span>
-              <button class="chat-chip" onclick="sendQuickPrompt('Explain why this flow was flagged by the ML model')">Explain Threat Attribution</button>
-              <button class="chat-chip" onclick="sendQuickPrompt('Generate iptables firewall drop rule for this attack')">Generate iptables Rule</button>
-              <button class="chat-chip" onclick="sendQuickPrompt('Map this attack to the MITRE ATT&CK matrix and provide mitigation steps')">MITRE ATT&amp;CK &amp; Playbook</button>
-              <button class="chat-chip" onclick="sendQuickPrompt('What is the minimum parameter change needed for evasion?')">Analyze Evasion Margin</button>
+              <button class="chat-chip"
+                onclick="sendQuickPrompt('Explain why this flow was flagged by the ML model')">Explain Threat
+                Attribution</button>
+              <button class="chat-chip"
+                onclick="sendQuickPrompt('Generate iptables firewall drop rule for this attack')">Generate iptables
+                Rule</button>
+              <button class="chat-chip"
+                onclick="sendQuickPrompt('Map this attack to the MITRE ATT&CK matrix and provide mitigation steps')">MITRE
+                ATT&amp;CK &amp; Playbook</button>
+              <button class="chat-chip"
+                onclick="sendQuickPrompt('What is the minimum parameter change needed for evasion?')">Analyze Evasion
+                Margin</button>
             </div>
 
             <!-- Input bar -->
             <form id="chat-form" class="chat-input-bar">
-              <input type="text" id="chat-input" class="chat-input" placeholder="Ask AI Copilot about network threats, iptables rules, telemetry analysis..." required autocomplete="off">
+              <input type="text" id="chat-input" class="chat-input"
+                placeholder="Ask AI Copilot about network threats, iptables rules, telemetry analysis..." required
+                autocomplete="off">
               <button type="submit" class="btn-primary" style="padding: 10px 20px;">Send &rarr;</button>
             </form>
           </div>
@@ -451,6 +602,7 @@
   <!-- Toast Notification -->
   <div id="toast" class="toast"></div>
 
-  <script src="/static/js/app.js"></script>
+  <script src="/static/js/app.js?v=6"></script>
 </body>
+
 </html>

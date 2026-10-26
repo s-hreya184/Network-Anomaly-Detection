@@ -11,7 +11,6 @@ let chatHistory = [];
 document.addEventListener("DOMContentLoaded", () => {
   initNav();
   loadPresets();
-  loadSystemHealth();
   setupSingleFlowForm();
   setupBatchUpload();
   setupWhatIfSimulator();
@@ -41,20 +40,6 @@ function switchTab(targetId) {
   if (activeContent) activeContent.classList.add("active");
 }
 
-// --- SYSTEM HEALTH & METRICS ---
-async function loadSystemHealth() {
-  try {
-    const res = await fetch("/api/health");
-    const data = await res.json();
-    if (data.status === "healthy") {
-      const badge = document.getElementById("system-status");
-      if (badge) badge.innerHTML = `<span class="status-dot"></span> XAI &amp; GEMINI COPILOT ONLINE (${data.classes_detected.length} CLASSES)`;
-    }
-  } catch (err) {
-    console.error("Health check failed:", err);
-  }
-}
-
 // --- PRESETS ---
 async function loadPresets() {
   try {
@@ -63,12 +48,13 @@ async function loadPresets() {
     const container = document.getElementById("presets-container");
     if (!container) return;
     
-    container.innerHTML = `<span style="font-size: 0.8rem; color: #94A3B8; font-weight: 600; text-transform: uppercase;">Quick Presets:</span>`;
+    container.innerHTML = `<span style="font-size: 0.76rem; color: #1E3A8A; font-weight: 700; text-transform: uppercase; margin-right: 4px;">1-Click Scenarios:</span>`;
     
     for (const [key, preset] of Object.entries(availablePresets)) {
       const chip = document.createElement("button");
       chip.className = "preset-chip";
       chip.type = "button";
+      chip.dataset.preset = key;
       chip.textContent = preset.title;
       chip.addEventListener("click", () => applyPreset(key));
       container.appendChild(chip);
@@ -82,11 +68,40 @@ function applyPreset(presetKey) {
   const preset = availablePresets[presetKey];
   if (!preset) return;
   
+  // Highlight active preset chip
+  document.querySelectorAll(".preset-chip").forEach(c => {
+    c.classList.toggle("active-preset", c.dataset.preset === presetKey);
+  });
+  
   for (const [feat, val] of Object.entries(preset.data)) {
     const input = document.getElementById(`flow_${feat}`);
     if (input) input.value = val;
   }
-  showToast(`Loaded preset: ${preset.title}`);
+  showToast(`Loaded scenario: ${preset.title}`);
+}
+
+function resetFlowForm() {
+  const form = document.getElementById("single-flow-form");
+  if (!form) return;
+  
+  document.querySelectorAll(".preset-chip").forEach(c => c.classList.remove("active-preset"));
+  
+  document.getElementById("flow_duration").value = "0.05";
+  document.getElementById("flow_protocol").value = "TCP";
+  document.getElementById("flow_service").value = "HTTP";
+  document.getElementById("flow_tcp_flags").value = "ACK";
+  document.getElementById("flow_src_bytes").value = "250";
+  document.getElementById("flow_dst_bytes").value = "1200";
+  document.getElementById("flow_src_packets").value = "4";
+  document.getElementById("flow_dst_packets").value = "6";
+  document.getElementById("flow_src_dst_byte_ratio").value = "0.21";
+  document.getElementById("flow_packets_per_second").value = "200";
+  document.getElementById("flow_bytes_per_second").value = "29000";
+  
+  const container = document.getElementById("single-result-container");
+  if (container) container.innerHTML = "";
+  
+  showToast("Reset form inputs to baseline defaults");
 }
 
 // --- SINGLE FLOW PREDICTION WITH XAI & COUNTERFACTUALS ---
@@ -155,9 +170,9 @@ function renderSingleResult(result) {
     const mods = Object.entries(cf.modifications_required);
     if (mods.length > 0) {
       cfModificationsHtml = mods.map(([k, v]) => `
-        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 0.85rem;">
-          <span style="color: #94A3B8;">${k}:</span>
-          <span style="color: #FFF; font-family: 'JetBrains Mono', monospace;"><b>${v.original}</b> &rarr; <b style="color: var(--color-cyan);">${v.counterfactual}</b> (${v.delta})</span>
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; font-size: 0.85rem;">
+          <span style="color: #64748B;">${k}:</span>
+          <span style="color: #0F172A; font-family: 'JetBrains Mono', monospace;"><b>${v.original}</b> &rarr; <b style="color: #1E3A8A;">${v.counterfactual}</b> <span style="color: #64748B; font-size: 0.78rem;">(${v.delta})</span></span>
         </div>
       `).join("");
     } else {
@@ -172,14 +187,14 @@ function renderSingleResult(result) {
           <span style="font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; color: ${isAnomaly ? 'var(--color-rose)' : 'var(--color-emerald)'}; text-transform: uppercase;">
             ${isAnomaly ? 'ANOMALY / THREAT DETECTED' : 'BENIGN / NORMAL TRAFFIC'}
           </span>
-          <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 2.75rem; font-weight: 700; color: #FFF; margin: 4px 0 10px 0;">
+          <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 700; color: #0F172A; margin: 4px 0 10px 0;">
             ${result.prediction}
           </h2>
           <span class="badge badge-${sevClass}">${result.severity} SEVERITY</span>
         </div>
         <div style="text-align: right;">
-          <div style="font-size: 0.8rem; color: #94A3B8; text-transform: uppercase; font-weight: 600;">Model Confidence</div>
-          <div style="font-family: 'Space Grotesk', sans-serif; font-size: 2.2rem; font-weight: 700; color: #FFF;">
+          <div style="font-size: 0.76rem; color: #64748B; text-transform: uppercase; font-weight: 600;">Model Confidence</div>
+          <div style="font-family: 'Space Grotesk', sans-serif; font-size: 2.2rem; font-weight: 700; color: #0F172A;">
             ${result.confidence_pct}
           </div>
           <div style="font-size: 0.75rem; color: #64748B;">Analyzed at ${result.timestamp}</div>
@@ -188,48 +203,48 @@ function renderSingleResult(result) {
       
       <!-- Natural Language Rationale -->
       ${exp ? `
-        <div style="background: rgba(6, 182, 212, 0.08); border-left: 3px solid var(--color-cyan); padding: 14px 18px; border-radius: 6px; margin: 18px 0; font-size: 0.92rem; color: #E2E8F0; line-height: 1.6;">
-          <b style="color: var(--color-cyan); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Explainable Decision Rationale:</b>
+        <div style="background: rgba(30, 58, 138, 0.05); border-left: 3px solid #1E3A8A; padding: 14px 18px; border-radius: 6px; margin: 18px 0; font-size: 0.92rem; color: #1E293B; line-height: 1.6;">
+          <b style="color: #1E3A8A; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Explainable Decision Rationale:</b>
           ${exp.natural_language_rationale}
         </div>
       ` : ''}
 
       <!-- Telemetry Overview -->
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 20px; background: rgba(15, 23, 42, 0.6); padding: 18px; border-radius: 8px; border: 1px solid var(--border-color);">
-        <div><span style="color:#64748B; font-size:0.75rem;">PROTOCOL / SERVICE</span><br><b style="color:#FFF;">${result.traffic_profile.protocol} / ${result.traffic_profile.service}</b></div>
-        <div><span style="color:#64748B; font-size:0.75rem;">PACKETS / SEC</span><br><b style="color:#FFF;">${result.traffic_profile.packets_per_second.toLocaleString()} P/s</b></div>
-        <div><span style="color:#64748B; font-size:0.75rem;">BYTES / SEC</span><br><b style="color:#FFF;">${result.traffic_profile.bytes_per_second.toLocaleString()} B/s</b></div>
-        <div><span style="color:#64748B; font-size:0.75rem;">SRC/DST RATIO</span><br><b style="color:#FFF;">${result.traffic_profile.src_dst_byte_ratio}</b></div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 20px; background: #F8FAFC; padding: 18px; border-radius: 8px; border: 1px solid #E2E8F0;">
+        <div><span style="color:#64748B; font-size:0.75rem;">PROTOCOL / SERVICE</span><br><b style="color:#0F172A;">${result.traffic_profile.protocol} / ${result.traffic_profile.service}</b></div>
+        <div><span style="color:#64748B; font-size:0.75rem;">PACKETS / SEC</span><br><b style="color:#0F172A;">${result.traffic_profile.packets_per_second.toLocaleString()} P/s</b></div>
+        <div><span style="color:#64748B; font-size:0.75rem;">BYTES / SEC</span><br><b style="color:#0F172A;">${result.traffic_profile.bytes_per_second.toLocaleString()} B/s</b></div>
+        <div><span style="color:#64748B; font-size:0.75rem;">SRC/DST RATIO</span><br><b style="color:#0F172A;">${result.traffic_profile.src_dst_byte_ratio}</b></div>
       </div>
 
       <!-- XAI Feature Attribution & Counterfactual Columns -->
       <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-top: 24px;">
         <!-- Feature Attribution Chart -->
-        <div class="card" style="margin-bottom: 0; background: rgba(15, 23, 42, 0.5);">
-          <h4 style="font-size: 0.95rem; color: #FFF; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em;">Local Feature Attribution</h4>
-          <p style="font-size: 0.78rem; color: #94A3B8; margin-bottom: 12px;">Marginal contribution of flow features toward this decision.</p>
+        <div class="card" style="margin-bottom: 0; background: #FFFFFF;">
+          <h4 style="font-size: 0.95rem; color: #0F172A; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em;">Local Feature Attribution</h4>
+          <p style="font-size: 0.78rem; color: #64748B; margin-bottom: 12px;">Marginal contribution of flow features toward this decision.</p>
           <div style="height: 240px;">
             <canvas id="attributionChart"></canvas>
           </div>
         </div>
 
         <!-- Counterfactual & Evasion Robustness -->
-        <div class="card" style="margin-bottom: 0; background: rgba(15, 23, 42, 0.5);">
+        <div class="card" style="margin-bottom: 0; background: #FFFFFF;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <h4 style="font-size: 0.95rem; color: #FFF; text-transform: uppercase; letter-spacing: 0.04em;">Counterfactual Robustness</h4>
+            <h4 style="font-size: 0.95rem; color: #0F172A; text-transform: uppercase; letter-spacing: 0.04em;">Counterfactual Robustness</h4>
             <span class="badge ${cf && cf.evasion_robustness_margin < 30 ? 'badge-critical' : 'badge-low'}" style="font-size: 0.7rem;">
               ${cf ? cf.evasion_risk_level : 'Evaluated'}
             </span>
           </div>
-          <p style="font-size: 0.78rem; color: #94A3B8; margin-bottom: 14px;">Minimum parameter delta to transition classification to <b>${cf ? cf.target_prediction : 'Normal'}</b>.</p>
+          <p style="font-size: 0.78rem; color: #64748B; margin-bottom: 14px;">Minimum parameter delta to transition classification to <b>${cf ? cf.target_prediction : 'Normal'}</b>.</p>
           
           <div style="margin-bottom: 16px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #94A3B8; margin-bottom: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #64748B; margin-bottom: 4px;">
               <span>Adversarial Evasion Distance Margin:</span>
-              <b style="color: #FFF;">${cf ? cf.evasion_robustness_margin : 0}/100</b>
+              <b style="color: #0F172A;">${cf ? cf.evasion_robustness_margin : 0}/100</b>
             </div>
-            <div style="background: rgba(255,255,255,0.08); height: 6px; border-radius: 3px; overflow: hidden;">
-              <div style="width: ${cf ? cf.evasion_robustness_margin : 0}%; height: 100%; background: ${cf && cf.evasion_robustness_margin < 30 ? 'var(--color-rose)' : 'var(--color-cyan)'};"></div>
+            <div style="background: rgba(30,58,138,0.1); height: 6px; border-radius: 3px; overflow: hidden;">
+              <div style="width: ${cf ? cf.evasion_robustness_margin : 0}%; height: 100%; background: ${cf && cf.evasion_robustness_margin < 30 ? 'var(--color-rose)' : '#1E3A8A'};"></div>
             </div>
           </div>
 
@@ -579,6 +594,106 @@ function renderTable(rows) {
   }).join("");
 }
 
+// --- BATCH REPORT DOWNLOADS ---
+function downloadBatchCSVReport() {
+  if (!currentBatchData || !currentBatchData.results || currentBatchData.results.length === 0) {
+    alert("Please analyze a dataset first before downloading the report.");
+    return;
+  }
+  
+  const headers = [
+    "Flow_ID",
+    "prediction",
+    "is_anomaly",
+    "severity",
+    "confidence_pct",
+    "protocol",
+    "service",
+    "duration",
+    "src_bytes",
+    "dst_bytes",
+    "src_packets",
+    "dst_packets",
+    "packets_per_second",
+    "bytes_per_second",
+    "tcp_flags"
+  ];
+  
+  const csvRows = [headers.join(",")];
+  
+  for (const r of currentBatchData.results) {
+    const values = headers.map(h => {
+      let val = r[h] !== undefined ? r[h] : "";
+      if (typeof val === "string" && val.includes(",")) {
+        val = `"${val.replace(/"/g, '""')}"`;
+      }
+      return val;
+    });
+    csvRows.push(values.join(","));
+  }
+  
+  const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  triggerFileDownload(blob, `cyberguard_inspection_report_${new Date().toISOString().slice(0, 10)}.csv`);
+  showToast("Full CSV report downloaded");
+}
+
+function downloadBatchSummaryReport() {
+  if (!currentBatchData) {
+    alert("Please analyze a dataset first before downloading the report.");
+    return;
+  }
+  
+  const d = currentBatchData;
+  const attackBreakdown = d.attack_counts ? Object.entries(d.attack_counts).map(([atk, cnt]) => `  - ${atk}: ${cnt} flows (${((cnt / d.total_flows) * 100).toFixed(1)}%)`).join("\n") : "  None";
+  const sevBreakdown = d.severity_counts ? Object.entries(d.severity_counts).map(([sev, cnt]) => `  - ${sev}: ${cnt} flows`).join("\n") : "  None";
+  
+  const reportText = `========================================================================
+CYBERGUARD XAI-NIDS: NETWORK TRAFFIC ANALYSIS REPORT
+Generated on: ${new Date().toLocaleString()}
+========================================================================
+
+1. EXECUTIVE SUMMARY
+------------------------------------------------------------------------
+Total Network Flows Analyzed : ${d.total_flows.toLocaleString()}
+Normal / Benign Flows        : ${d.normal_flows.toLocaleString()}
+Anomalies / Threats Detected : ${d.anomalies_detected.toLocaleString()}
+Overall Threat Detection Rate: ${d.detection_rate_pct}%
+
+2. ATTACK CLASSIFICATION BREAKDOWN
+------------------------------------------------------------------------
+${attackBreakdown}
+
+3. SEVERITY RISK ASSESSMENT
+------------------------------------------------------------------------
+${sevBreakdown}
+
+4. KEY RECOMMENDED ACTIONS FOR SOC OPERATORS
+------------------------------------------------------------------------
+- Review Critical & High severity flows flagged under DoS or Botnet categories.
+- Export drop rules for identified attack sources using the AI SOC Copilot.
+- Inspect application layer protocols with high packet/second velocity.
+
+========================================================================
+End of Report - CyberGuard ML Network Intrusion Detection System
+========================================================================`;
+
+  const blob = new Blob([reportText], { type: "text/plain;charset=utf-8;" });
+  triggerFileDownload(blob, `cyberguard_executive_summary_${new Date().toISOString().slice(0, 10)}.txt`);
+  showToast("Executive summary report downloaded");
+}
+
+function triggerFileDownload(blob, filename) {
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  link.style.visibility = "hidden";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 // --- WHAT-IF SIMULATOR ---
 function setupWhatIfSimulator() {
   const form = document.getElementById("simulator-form");
@@ -630,14 +745,14 @@ function renderSimulationResult(data) {
   container.innerHTML = `
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px;">
       <div class="result-box ${data.baseline.prediction === 'Normal' ? 'normal' : 'anomaly'}">
-        <span style="font-size:0.75rem; color:#94A3B8; text-transform:uppercase; font-weight:700;">BASELINE FLOW</span>
-        <h3 style="font-size: 2rem; color: #FFF; margin: 6px 0;">${data.baseline.prediction}</h3>
-        <p style="color:#94A3B8;">Confidence: <b>${data.baseline.confidence_pct}</b> &bull; ${data.baseline.severity}</p>
+        <span style="font-size:0.75rem; color:#64748B; text-transform:uppercase; font-weight:700;">BASELINE FLOW</span>
+        <h3 style="font-size: 2rem; color: #0F172A; margin: 6px 0;">${data.baseline.prediction}</h3>
+        <p style="color:#64748B;">Confidence: <b>${data.baseline.confidence_pct}</b> &bull; ${data.baseline.severity}</p>
       </div>
       <div class="result-box ${data.simulated.prediction === 'Normal' ? 'normal' : 'anomaly'}">
-        <span style="font-size:0.75rem; color:var(--color-cyan); text-transform:uppercase; font-weight:700;">SIMULATED FLOW</span>
-        <h3 style="font-size: 2rem; color: #FFF; margin: 6px 0;">${data.simulated.prediction}</h3>
-        <p style="color:var(--color-cyan);">Confidence: <b>${data.simulated.confidence_pct}</b> &bull; ${data.simulated.severity}</p>
+        <span style="font-size:0.75rem; color:#1E3A8A; text-transform:uppercase; font-weight:700;">SIMULATED FLOW</span>
+        <h3 style="font-size: 2rem; color: #0F172A; margin: 6px 0;">${data.simulated.prediction}</h3>
+        <p style="color:#1E3A8A;">Confidence: <b>${data.simulated.confidence_pct}</b> &bull; ${data.simulated.severity}</p>
       </div>
     </div>
   `;
@@ -657,14 +772,14 @@ async function loadAlerts() {
     }
     
     list.innerHTML = alerts.map(a => `
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 10px;">
         <div>
           <span class="badge badge-${a.severity ? a.severity.toLowerCase() : 'medium'}">${a.severity || 'ALERT'}</span>
-          <b style="color: #FFF; margin-left: 10px; font-size: 0.95rem;">${a.attack_type}</b>
+          <b style="color: #0F172A; margin-left: 10px; font-size: 0.95rem;">${a.attack_type}</b>
           <span style="color: #64748B; font-size: 0.8rem; margin-left: 10px;">${a.source_info || ''}</span>
         </div>
         <div style="text-align: right;">
-          <span style="color: var(--color-cyan); font-weight: 600; font-size: 0.85rem;">${a.confidence || ''}</span>
+          <span style="color: #1E3A8A; font-weight: 600; font-size: 0.85rem;">${a.confidence || ''}</span>
           <div style="color: #64748B; font-size: 0.75rem;">${a.timestamp || ''}</div>
         </div>
       </div>

@@ -73,8 +73,6 @@ The model analyzes the following 11 network flow features:
 
 ## 8. Application & Deployment
 
-The system offers two deployment interfaces:
-
 ### A. Production Web Dashboard & REST API (FastAPI)
 The primary deployment uses **FastAPI** with an async REST API and a responsive modern web dashboard.
 ```bash
@@ -90,12 +88,7 @@ python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
   * `GET /api/demo-data`: Pre-loaded benchmark evaluation.
   * `GET /api/alerts`: Persistent security incident ledger.
 
-### B. Prototyping Dashboard (Streamlit)
-```bash
-streamlit run dashboard/app.py
-```
-
-### C. Containerized Docker Deployment
+### B. Containerized Docker Deployment
 ```bash
 docker build -t cyberguard-nids .
 docker run -p 8000:8000 cyberguard-nids
@@ -104,14 +97,16 @@ docker run -p 8000:8000 cyberguard-nids
 ## 9. Technology Stack
 - **Backend & ML Serving**: FastAPI, Uvicorn, Pydantic, Scikit-learn, Joblib
 - **Data Manipulation**: Pandas, NumPy
-- **Frontend & Visualizations**: HTML5, CSS3, JavaScript, Chart.js, Plotly, Streamlit
+- **Frontend & Visualizations**: HTML5, CSS3, JavaScript, Chart.js
 - **Containerization**: Docker
 
 ## 10. Project Structure
 ```text
 Network-Anomaly-Detection/
 │
-├── dashboard/           # Streamlit app and UI components
+├── api/                 # FastAPI REST API endpoints & route handlers
+├── templates/           # Web dashboard HTML templates
+├── static/              # Dashboard styling and frontend scripts
 ├── src/                 # Core prediction, risk, and analysis logic
 ├── models/              # Serialized ML pipeline and encoders
 ├── data/                # Sample datasets for testing
@@ -143,11 +138,11 @@ Network-Anomaly-Detection/
    ```
 
 ## 12. Running the Application
-To start the NIDS dashboard, run:
+To start the NIDS web dashboard and API server, run:
 ```bash
-streamlit run dashboard/app.py
+python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-Then, open the provided local URL in your web browser.
+Then, open [http://localhost:8000](http://localhost:8000) in your web browser.
 
 ## 13. Dataset
 The project utilizes a synthetic dataset (`cyberguard_synthetic_demo (1).csv`) for demonstration and evaluation purposes. The dataset consists of predefined features that mimic network flow statistics.

@@ -10,6 +10,5 @@ joblib
 matplotlib
 seaborn
 pytest
-streamlit
 python-dotenv
 requests

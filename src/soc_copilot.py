@@ -15,11 +15,11 @@ class SOCCopilot:
     """
     
     GEMINI_MODELS = [
-        "gemini-flash-latest",
-        "gemini-pro-latest",
-        "gemini-3.8-flash",
-        "gemini-3.5-flash",
-        "gemini-2.5-flash"
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash-8b",
+        "gemini-2.0-flash-exp"
     ]
     
     def __init__(self, default_api_key: Optional[str] = None):
@@ -31,11 +31,17 @@ class SOCCopilot:
         Sends a query to Gemini with rich telemetry and ML context.
         Falls back to local rule-based SOC expert intelligence if no key is configured.
         """
-        active_key = api_key or self.default_api_key or os.getenv("GEMINI_API_KEY", "")
+        try:
+            from dotenv import load_dotenv
+            load_dotenv(override=True)
+        except Exception:
+            pass
+
+        active_key = (api_key or os.getenv("GEMINI_API_KEY", "") or self.default_api_key or "").strip()
         
         system_prompt = self._build_system_prompt(flow_context)
         
-        if active_key.strip():
+        if active_key:
             try:
                 reply, model_used = self._call_gemini_api(user_message, system_prompt, active_key, history)
                 return {
@@ -59,6 +65,37 @@ class SOCCopilot:
                 "provider": "CyberGuard Local SOC Expert (No API Key Configured)",
                 "status": "local_expert"
             }
+
+    def _discover_models(self, api_key: str) -> List[str]:
+        """Queries Google Gemini ListModels to discover supported models for generateContent."""
+        for version in ["v1beta", "v1"]:
+            url = f"https://generativelanguage.googleapis.com/{version}/models?key={api_key}"
+            try:
+                resp = requests.get(url, timeout=5)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    models = []
+                    for m in data.get("models", []):
+                        methods = m.get("supportedGenerationMethods", [])
+                        if "generateContent" in methods:
+                            m_name = m.get("name", "").replace("models/", "")
+                            if m_name:
+                                models.append(m_name)
+                    if models:
+                        # Prioritize flash models, then pro, then others
+                        flash_models = [m for m in models if "flash" in m]
+                        pro_models = [m for m in models if "pro" in m and "flash" not in m]
+                        other_models = [m for m in models if m not in flash_models and m not in pro_models]
+                        return flash_models + pro_models + other_models
+                elif resp.status_code in (400, 403):
+                    err_json = resp.json().get("error", {})
+                    err_msg = err_json.get("message", "API key invalid or unauthorized")
+                    raise RuntimeError(f"Authentication failure ({resp.status_code}): {err_msg}")
+            except RuntimeError:
+                raise
+            except Exception:
+                pass
+        return []
 
     def _build_system_prompt(self, flow_context: Optional[Dict[str, Any]] = None) -> str:
         prompt = (
@@ -122,8 +159,16 @@ class SOCCopilot:
             "parts": [{"text": user_message}]
         })
         
+        # Ensure valid turn alternating (Gemini API requires alternating roles)
+        clean_contents = []
+        for c in contents:
+            if clean_contents and clean_contents[-1]["role"] == c["role"]:
+                clean_contents[-1]["parts"][0]["text"] += "\n\n" + c["parts"][0]["text"]
+            else:
+                clean_contents.append({"role": c["role"], "parts": [{"text": c["parts"][0]["text"]}]})
+
         payload = {
-            "contents": contents,
+            "contents": clean_contents,
             "generationConfig": {
                 "temperature": 0.3,
                 "maxOutputTokens": 800
@@ -131,22 +176,44 @@ class SOCCopilot:
         }
         
         headers = {"Content-Type": "application/json"}
-        last_err = None
+        
+        discovered = self._discover_models(api_key)
+        candidate_models = discovered if discovered else self.GEMINI_MODELS
+        errors = []
 
-        for model_name in self.GEMINI_MODELS:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
-            try:
-                response = requests.post(url, headers=headers, json=payload, timeout=5)
-                if response.status_code == 200:
-                    data = response.json()
-                    text = data["candidates"][0]["content"]["parts"][0]["text"]
-                    return text, model_name
-                else:
-                    last_err = f"HTTP {response.status_code} on {model_name}"
-            except Exception as ex:
-                last_err = f"Request to {model_name} timed out or failed"
+        for model_name in candidate_models:
+            for version in ["v1beta", "v1"]:
+                url = f"https://generativelanguage.googleapis.com/{version}/models/{model_name}:generateContent?key={api_key}"
+                try:
+                    response = requests.post(url, headers=headers, json=payload, timeout=12)
+                    if response.status_code == 200:
+                        data = response.json()
+                        candidates = data.get("candidates", [])
+                        if candidates and "content" in candidates[0]:
+                            parts = candidates[0]["content"].get("parts", [])
+                            if parts and "text" in parts[0]:
+                                return parts[0]["text"], model_name
+                    else:
+                        err_msg = ""
+                        try:
+                            err_json = response.json()
+                            err_msg = err_json.get('error', {}).get('message', '')
+                        except Exception:
+                            err_msg = response.text[:80]
 
-        raise RuntimeError(last_err or "Failed to communicate with any Gemini model endpoint.")
+                        # Detect critical key errors immediately
+                        if "API_KEY_INVALID" in err_msg or "API key not valid" in err_msg:
+                            raise RuntimeError(f"API key not valid: {err_msg}")
+                        if "RESOURCE_EXHAUSTED" in err_msg or "quota" in err_msg.lower():
+                            raise RuntimeError(f"Gemini API quota exceeded: {err_msg}")
+
+                        errors.append(f"{model_name} ({version}): HTTP {response.status_code} ({err_msg})")
+                except RuntimeError:
+                    raise
+                except Exception as ex:
+                    errors.append(f"{model_name}: {str(ex)}")
+
+        raise RuntimeError(errors[0] if errors else "Failed to communicate with any Gemini model endpoint.")
 
     def _generate_local_expert_response(self, query: str, context: Optional[Dict[str, Any]] = None,
                                         error_note: Optional[str] = None) -> str:
