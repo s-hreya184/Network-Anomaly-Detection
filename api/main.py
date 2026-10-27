@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
@@ -225,6 +225,12 @@ async def predict_single_flow(flow: NetworkFlow, include_xai: bool = True):
                 dst_info=f"{flow.dst_packets} pkts, {flow.dst_bytes} B"
             )
             
+        unsupervised_data = None
+        try:
+            unsupervised_data = predictor.predict_unsupervised_single(flow_dict)
+        except Exception as e:
+            print(f"Unsupervised calculation warning: {e}")
+
         return PredictionResponse(
             prediction=pred,
             confidence=confidence_val,
@@ -234,7 +240,8 @@ async def predict_single_flow(flow: NetworkFlow, include_xai: bool = True):
             traffic_profile=flow_dict,
             timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             explanation=explanation_data,
-            counterfactual=counterfactual_data
+            counterfactual=counterfactual_data,
+            unsupervised=unsupervised_data
         )
     except DataValidationError as e:
         raise HTTPException(status_code=422, detail=str(e))
@@ -313,6 +320,7 @@ async def run_demo_dataset():
 def process_batch_dataframe(df: pd.DataFrame, source_name: str = "batch") -> BatchPredictionResponse:
     try:
         preds, probs = predictor.predict_batch(df)
+        unsupervised_anom, unsupervised_scores, unsupervised_labels = predictor.predict_unsupervised_batch(df)
     except DataValidationError as e:
         raise HTTPException(status_code=422, detail=f"Dataset validation failed: {str(e)}")
     except Exception as e:
@@ -344,6 +352,8 @@ def process_batch_dataframe(df: pd.DataFrame, source_name: str = "batch") -> Bat
         row_dict["confidence_pct"] = f"{conf * 100:.1f}%"
         row_dict["severity"] = sev
         row_dict["is_anomaly"] = (pred != "Normal")
+        row_dict["unsupervised_label"] = str(unsupervised_labels[i]) if i < len(unsupervised_labels) else "N/A"
+        row_dict["unsupervised_score"] = round(float(unsupervised_scores[i]), 4) if i < len(unsupervised_scores) else 0.0
         results.append(row_dict)
         
     total = len(df)
@@ -425,8 +435,62 @@ async def get_analysis_history():
     df = history_mgr.get_all_history()
     if df.empty:
         return []
-    return df.fillna("").to_dict(orient="records")
+@app.get("/api/unsupervised/metrics", tags=["Unsupervised Anomaly Detection"])
+async def get_unsupervised_metrics():
+    """Retrieve performance metrics comparing Supervised RF vs Unsupervised Isolation Forest."""
+    return {
+        "status": "active" if predictor.unsupervised_pipeline is not None else "unavailable",
+        "primary_model": "Isolation Forest (Unsupervised)",
+        "comparison": [
+            {
+                "algorithm": "Random Forest (Supervised)",
+                "paradigm": "Supervised (Trained on labels)",
+                "accuracy": "95.00%",
+                "precision": "97.14%",
+                "recall": "89.47%",
+                "f1_score": "93.15%",
+                "roc_auc": "98.80%"
+            },
+            {
+                "algorithm": "Isolation Forest (Unsupervised)",
+                "paradigm": "Unsupervised (Zero labels used)",
+                "accuracy": "68.00%",
+                "precision": "56.82%",
+                "recall": "65.79%",
+                "f1_score": "60.98%",
+                "roc_auc": "73.07%"
+            },
+            {
+                "algorithm": "One-Class SVM (Unsupervised)",
+                "paradigm": "Unsupervised (Zero labels used)",
+                "accuracy": "69.00%",
+                "precision": "57.95%",
+                "recall": "67.11%",
+                "f1_score": "62.20%",
+                "roc_auc": "72.93%"
+            }
+        ],
+        "attack_detection_rates": {
+            "DoS": "90.5%",
+            "Botnet": "71.4%",
+            "Probe": "70.0%",
+            "Other": "87.5%",
+            "Brute_Force": "30.0%",
+            "Web_Attack": "20.0%"
+        }
+    }
+
+@app.get("/api/unsupervised/chart", tags=["Unsupervised Anomaly Detection"])
+async def get_unsupervised_chart():
+    """Serve the 4-panel evaluation chart comparing Supervised vs Unsupervised learning."""
+    chart_path = "outputs/unsupervised_evaluation.png"
+    if not os.path.exists(chart_path):
+        chart_path = "unsupervised_evaluation.png"
+    if not os.path.exists(chart_path):
+        raise HTTPException(status_code=404, detail="Evaluation chart not found.")
+    return FileResponse(chart_path, media_type="image/png")
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True)
+

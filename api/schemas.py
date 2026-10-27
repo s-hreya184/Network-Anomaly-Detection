@@ -60,6 +60,7 @@ class PredictionResponse(BaseModel):
     timestamp: str
     explanation: Optional[ExplanationResponse] = None
     counterfactual: Optional[CounterfactualResponse] = None
+    unsupervised: Optional[Dict[str, Any]] = None
 
 class BatchPredictionResponse(BaseModel):
     total_flows: int

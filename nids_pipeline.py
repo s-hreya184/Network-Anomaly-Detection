@@ -7,7 +7,15 @@ from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.metrics import (
+    classification_report,
+    confusion_matrix,
+    accuracy_score,
+    balanced_accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+)
 import os
 import joblib
 
@@ -61,7 +69,10 @@ def main():
     
     # 6. Model Setup
     # Using RandomForest to handle non-linear relationships and interactions robustly
-    model = RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')
+    
+    
+    model = RandomForestClassifier(n_estimators=150, random_state=42, max_depth=20, class_weight='balanced') #improves accuracy
+    #model = RandomForestClassifier(n_estimators=100, random_state=42,  class_weight='balanced')
     
     pipeline = Pipeline(steps=[
         ('preprocessor', preprocessor),
@@ -78,6 +89,14 @@ def main():
     
     acc = accuracy_score(y_test, y_pred)
     print(f"\nTest Accuracy: {acc:.4f}")
+    print(f"Accuracy:          {accuracy_score(y_test, y_pred):.4f}")
+    print(f"Balanced Accuracy: {balanced_accuracy_score(y_test, y_pred):.4f}")
+
+    print(f"Macro Precision:   {precision_score(y_test, y_pred, average='macro', zero_division=0):.4f}")
+    print(f"Macro Recall:      {recall_score(y_test, y_pred, average='macro', zero_division=0):.4f}")
+    print(f"Macro F1-score:    {f1_score(y_test, y_pred, average='macro', zero_division=0):.4f}")
+
+   
     
     print("\n=== Classification Report ===")
     target_names = le.inverse_transform(np.unique(y_encoded))
@@ -95,27 +114,27 @@ def main():
     plt.savefig('confusion_matrix.png')
     print("Saved confusion matrix as 'confusion_matrix.png'")
     
-    # 9. Feature Importance Analysis
-    print("\nExtracting feature importances to investigate model behavior...")
-    # Get feature names after one-hot encoding
-    cat_feature_names = pipeline.named_steps['preprocessor'].named_transformers_['cat'].get_feature_names_out(cat_cols)
-    all_feature_names = num_cols + cat_feature_names.tolist()
+#     # 9. Feature Importance Analysis
+#     print("\nExtracting feature importances to investigate model behavior...")
+#     # Get feature names after one-hot encoding
+#     cat_feature_names = pipeline.named_steps['preprocessor'].named_transformers_['cat'].get_feature_names_out(cat_cols)
+#     all_feature_names = num_cols + cat_feature_names.tolist()
     
-    importances = pipeline.named_steps['classifier'].feature_importances_
+#     importances = pipeline.named_steps['classifier'].feature_importances_
     
-    feature_importance_df = pd.DataFrame({
-        'Feature': all_feature_names,
-        'Importance': importances
-    }).sort_values(by='Importance', ascending=False)
+#     feature_importance_df = pd.DataFrame({
+#         'Feature': all_feature_names,
+#         'Importance': importances
+#     }).sort_values(by='Importance', ascending=False)
     
-    print("\nTop 10 Most Important Features:")
-    print(feature_importance_df.head(10))
+#     print("\nTop 10 Most Important Features:")
+#     print(feature_importance_df.head(10))
     
-    # Save the pipeline for future use
-    os.makedirs('models', exist_ok=True)
-    joblib.dump(pipeline, 'models/nids_pipeline.pkl')
-    joblib.dump(le, 'models/label_encoder.pkl')
-    print("\nModel pipeline and label encoder saved successfully to models/ directory.")
+#     # Save the pipeline for future use
+#     os.makedirs('models', exist_ok=True)
+#     joblib.dump(pipeline, 'models/nids_pipeline.pkl')
+#     joblib.dump(le, 'models/label_encoder.pkl')
+#     print("\nModel pipeline and label encoder saved successfully to models/ directory.")
 
 if __name__ == "__main__":
     main()

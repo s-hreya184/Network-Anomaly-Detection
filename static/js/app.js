@@ -86,17 +86,17 @@ function resetFlowForm() {
   
   document.querySelectorAll(".preset-chip").forEach(c => c.classList.remove("active-preset"));
   
-  document.getElementById("flow_duration").value = "0.05";
+  document.getElementById("flow_duration").value = "0";
   document.getElementById("flow_protocol").value = "TCP";
   document.getElementById("flow_service").value = "HTTP";
   document.getElementById("flow_tcp_flags").value = "ACK";
-  document.getElementById("flow_src_bytes").value = "250";
-  document.getElementById("flow_dst_bytes").value = "1200";
-  document.getElementById("flow_src_packets").value = "4";
-  document.getElementById("flow_dst_packets").value = "6";
-  document.getElementById("flow_src_dst_byte_ratio").value = "0.21";
-  document.getElementById("flow_packets_per_second").value = "200";
-  document.getElementById("flow_bytes_per_second").value = "29000";
+  document.getElementById("flow_src_bytes").value = "0";
+  document.getElementById("flow_dst_bytes").value = "0";
+  document.getElementById("flow_src_packets").value = "0";
+  document.getElementById("flow_dst_packets").value = "0";
+  document.getElementById("flow_src_dst_byte_ratio").value = "0";
+  document.getElementById("flow_packets_per_second").value = "0";
+  document.getElementById("flow_bytes_per_second").value = "0";
   
   const container = document.getElementById("single-result-container");
   if (container) container.innerHTML = "";
@@ -206,6 +206,34 @@ function renderSingleResult(result) {
         <div style="background: rgba(30, 58, 138, 0.05); border-left: 3px solid #1E3A8A; padding: 14px 18px; border-radius: 6px; margin: 18px 0; font-size: 0.92rem; color: #1E293B; line-height: 1.6;">
           <b style="color: #1E3A8A; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Explainable Decision Rationale:</b>
           ${exp.natural_language_rationale}
+        </div>
+      ` : ''}
+
+      <!-- Dual Engine Verification: Supervised RF vs Unsupervised iForest -->
+      ${result.unsupervised && result.unsupervised.active ? `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px;">
+          <div style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 14px 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 0.72rem; font-weight: 700; color: #1E3A8A; text-transform: uppercase; letter-spacing: 0.05em;">Supervised Engine (Random Forest)</span>
+              <span class="badge badge-low" style="font-size: 0.68rem;">Multi-Class</span>
+            </div>
+            <div style="font-size: 1.15rem; font-weight: 700; color: #0F172A;">
+              ${result.prediction} <span style="font-size: 0.85rem; font-weight: 500; color: #64748B;">(${result.confidence_pct} conf)</span>
+            </div>
+            <div style="font-size: 0.78rem; color: #64748B; margin-top: 4px;">Known signature classification from 100 decision trees.</div>
+          </div>
+
+          <div style="background: ${result.unsupervised.is_anomaly ? '#FEF2F2' : '#F0FDF4'}; border: 1px solid ${result.unsupervised.is_anomaly ? '#FECACA' : '#BBF7D0'}; padding: 14px 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 0.72rem; font-weight: 700; color: ${result.unsupervised.is_anomaly ? '#DC2626' : '#059669'}; text-transform: uppercase; letter-spacing: 0.05em;">Unsupervised Engine (Isolation Forest)</span>
+              <span class="badge" style="background: ${result.unsupervised.is_anomaly ? '#FEE2E2; color: #991B1B' : '#D1FAE5; color: #065F46'}; font-size: 0.68rem;">Zero Labels</span>
+            </div>
+            <div style="font-size: 1.15rem; font-weight: 700; color: #0F172A;">
+              ${result.unsupervised.is_anomaly ? 'Outlier / Anomaly Flagged' : 'Normal Baseline Profile'} 
+              <span style="font-size: 0.82rem; font-weight: 500; color: #64748B;">(Score: ${result.unsupervised.anomaly_score})</span>
+            </div>
+            <div style="font-size: 0.78rem; color: #475569; margin-top: 4px;">${result.unsupervised.interpretation}</div>
+          </div>
         </div>
       ` : ''}
 
@@ -736,6 +764,31 @@ function setupWhatIfSimulator() {
       alert(err.message);
     }
   });
+}
+
+function loadSimulatorDemo() {
+  document.getElementById("sim_base_duration").value = "0.20";
+  document.getElementById("sim_base_protocol").value = "TCP";
+  document.getElementById("sim_base_service").value = "HTTP";
+  document.getElementById("sim_base_flags").value = "ACK";
+  document.getElementById("sim_base_src_bytes").value = "2500";
+  document.getElementById("sim_base_dst_bytes").value = "600";
+  document.getElementById("sim_base_src_packets").value = "10";
+  document.getElementById("sim_base_dst_packets").value = "10";
+  document.getElementById("sim_base_ratio").value = "4.16";
+  document.getElementById("sim_base_pps").value = "100";
+  document.getElementById("sim_base_bps").value = "15500";
+
+  document.getElementById("sim_mod_src_packets").value = "85";
+  document.getElementById("sim_mod_pps").value = "600";
+  document.getElementById("sim_mod_bps").value = "45000";
+  document.getElementById("sim_mod_flags").value = "SYN";
+
+  const form = document.getElementById("simulator-form");
+  if (form) {
+    form.dispatchEvent(new Event("submit"));
+  }
+  showToast("Loaded What-If Demo: Normal traffic perturbed into DoS Burst!");
 }
 
 function renderSimulationResult(data) {
