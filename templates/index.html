@@ -444,6 +444,10 @@
               <p class="card-subtitle">Perturb individual network flow parameters to understand model decision
                 boundaries.</p>
             </div>
+            <button type="button" class="btn-secondary" onclick="loadSimulatorDemo()"
+              style="font-size: 0.85rem; padding: 8px 16px; border: 1px solid #1E3A8A; color: #1E3A8A; font-weight: 600;">
+              &#9889; 1-Click Demo: Normal &rarr; DoS Burst
+            </button>
           </div>
 
           <form id="simulator-form">
@@ -454,7 +458,7 @@
               <div class="form-group">
                 <label class="form-label" for="sim_base_duration">
                   <span>Duration</span>
-                  <span class="form-hint">Seconds (e.g. 0.20)</span>
+                  <span class="form-hint">Seconds</span>
                 </label>
                 <input type="number" step="any" id="sim_base_duration" class="form-control" value="0">
               </div>
@@ -668,7 +672,7 @@
   <!-- Toast Notification -->
   <div id="toast" class="toast"></div>
 
-  <script src="/static/js/app.js?v=15"></script>
+  <script src="/static/js/app.js?v=14"></script>
 </body>
 
 </html>
